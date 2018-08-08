@@ -24,6 +24,7 @@ namespace Store
 
             bundles.Add(new StyleBundle("~/Content/css").Include(
                       "~/Content/bootstrap.css",
+                      "~/Content/bootstrap-3-cyborg.css",
                       "~/Content/site.css"));
         }
     }

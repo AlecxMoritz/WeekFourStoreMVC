@@ -10,7 +10,6 @@ using Store.Models;
 
 namespace Store.Controllers
 {
-    [Authorize]
     public class TransactionController : Controller
     {
         private ApplicationDbContext db = new ApplicationDbContext();
@@ -50,11 +49,13 @@ namespace Store.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "TransactionID,CustomerID,ProductID")] Transaction transaction)
+        public ActionResult Create([Bind(Include = "TransactionID,CustomerID,ProductID,CreatedAt")] Transaction transaction)
         {
             if (ModelState.IsValid)
             {
+                Product transactionProduct = db.Products.Single(p => p.ProductID == transaction.ProductID);
                 db.Transactions.Add(transaction);
+                transactionProduct.Quantity--;
                 db.SaveChanges();
                 return RedirectToAction("Index");
             }
@@ -86,7 +87,7 @@ namespace Store.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "TransactionID,CustomerID,ProductID")] Transaction transaction)
+        public ActionResult Edit([Bind(Include = "TransactionID,CustomerID,ProductID,CreatedAt")] Transaction transaction)
         {
             if (ModelState.IsValid)
             {

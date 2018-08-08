@@ -6,19 +6,62 @@ using System.Linq;
 using System.Net;
 using System.Web;
 using System.Web.Mvc;
+using PagedList;
 using Store.Models;
 
 namespace Store.Controllers
 {
-    [Authorize]
     public class CustomerController : Controller
     {
         private ApplicationDbContext db = new ApplicationDbContext();
 
         // GET: Customer
-        public ActionResult Index()
+        public ActionResult Index(string sortOrder, string currentFilter, string searchString, int? page)
         {
-            return View(db.Customers.ToList());
+            ViewBag.NameSortParm = String.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
+            ViewBag.DateSortParm = sortOrder == "Date" ? "date_desc" : "Date";
+
+            if(searchString != null)
+            {
+                page = 1;
+            }
+            else
+            {
+                searchString = currentFilter;
+            }
+
+            ViewBag.CurrentFilter = searchString;
+
+
+            var customers = from c in db.Customers
+                            select c;
+
+            if (!String.IsNullOrEmpty(searchString))
+            {
+                customers = customers.Where(c => c.FirstName.Contains(searchString) || c.LastName.Contains(searchString));
+            }
+
+            switch (sortOrder)
+            {
+                case "name_desc":
+                    customers = customers.OrderByDescending(c => c.LastName);
+                    break;
+                case "Date":
+                    customers = customers.OrderBy(c => c.CreatedAt);
+                    break;
+                case "date_desc":
+                    customers = customers.OrderByDescending(c => c.CreatedAt);
+                    break;
+                default:
+                    customers = customers.OrderBy(c => c.FirstName);
+                    break;
+            }
+
+
+            int pageSize = 3;
+            int PageNumber = (page ?? 1);
+
+            return View(customers.ToPagedList(PageNumber, pageSize));
         }
 
         // GET: Customer/Details/5
@@ -47,7 +90,7 @@ namespace Store.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "CustomerID,FirstName,LastName")] Customer customer)
+        public ActionResult Create([Bind(Include = "CustomerID,FirstName,LastName,Email,PhoneNumber,CreatedAt")] Customer customer)
         {
             if (ModelState.IsValid)
             {
@@ -79,7 +122,7 @@ namespace Store.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "CustomerID,FirstName,LastName")] Customer customer)
+        public ActionResult Edit([Bind(Include = "CustomerID,FirstName,LastName,Email,PhoneNumber,CreatedAt")] Customer customer)
         {
             if (ModelState.IsValid)
             {
