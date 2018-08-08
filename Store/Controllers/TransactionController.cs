@@ -53,9 +53,9 @@ namespace Store.Controllers
         {
             if (ModelState.IsValid)
             {
-                Product transactionProduct = db.Products.Single(p => p.ProductID == transaction.ProductID);
                 db.Transactions.Add(transaction);
-                transactionProduct.Quantity--;
+                Product transactionProduct = FindProductById(transaction);
+                DecreaseProductQuantity(transactionProduct, 1);
                 db.SaveChanges();
                 return RedirectToAction("Index");
             }
@@ -133,6 +133,29 @@ namespace Store.Controllers
                 db.Dispose();
             }
             base.Dispose(disposing);
+        }
+
+        private Product FindProductById(Transaction transaction)
+        {
+            if(transaction.ProductID == null)
+            {
+                throw new Exception();
+            }
+
+            Product transactionProduct = db.Products.Single(p => p.ProductID == transaction.ProductID);
+
+            if(transactionProduct == null)
+            {
+                throw new Exception();
+            }
+
+            return transactionProduct;
+        }
+
+        private void DecreaseProductQuantity(Product product, int quantity)
+        {
+            product.Quantity -= quantity;
+            db.SaveChanges();
         }
     }
 }
